@@ -12,34 +12,56 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Fetch Org Members and Update README
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python3 -c '
-          import os, urllib.request, json
+          python3 - << 'EOF'
+          import os
+          import json
+          import urllib.request
 
           url = "https://github.com"
-          req = urllib.request.Request(url, headers={"Authorization": f"Bearer {os.environ[\"GH_TOKEN\"]}"})
-          members = json.loads(urllib.request.urlopen(req).read().decode())
+          token = os.environ["GH_TOKEN"]
+          req = urllib.request.Request(
+              url,
+              headers={
+                  "Authorization": f"Bearer {token}",
+                  "Accept": "application/vnd.github+json",
+              },
+          )
+
+          with urllib.request.urlopen(req) as resp:
+              members = json.loads(resp.read().decode())
 
           cells = []
           for m in members:
               user = m["login"]
-              cells.append(f"<td align=\"center\"><a href=\"https://github.com{user}\"><img src=\"https://github.com{user}.png?size=100\" width=\"100px\"/><br /><sub><b>@{user}</b></sub></a></td>")
+              cells.append(
+                  f'<td align="center">'
+                  f'<a href="https://github.com{user}">'
+                  f'<img src="https://github.com{user}.png?size=100" width="100px"/><br />'
+                  f'<sub><b>@{user}</b></sub>'
+                  f'</a></td>'
+              )
 
           grid = "<table><tr>" + "".join(cells) + "</tr></table>"
 
-          with open("profile/README.md", "r") as f:
+          with open("profile/README.md", "r", encoding="utf-8") as f:
               content = f.read()
 
           start = "<!-- ORG-MEMBERS:START -->"
           end = "<!-- ORG-MEMBERS:END -->"
-          updated = content.split(start)[0] + f"{start}\n{grid}\n{end}" + content.split(end)[1]
 
-          with open("profile/README.md", "w") as f:
+          before = content.split(start)[0]
+          after = content.split(end)[1]
+          updated = f"{before}{start}\n{grid}\n{end}{after}"
+
+          with open("profile/README.md", "w", encoding="utf-8") as f:
               f.write(updated)
-          '
+          EOF
+
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
