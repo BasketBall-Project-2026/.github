@@ -1,0 +1,48 @@
+name: Update Org Members
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily
+  workflow_dispatch:      # Lets you run it manually anytime
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch Org Members and Update README
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 -c '
+          import os, urllib.request, json
+
+          url = "https://github.com"
+          req = urllib.request.Request(url, headers={"Authorization": f"Bearer {os.environ[\"GH_TOKEN\"]}"})
+          members = json.loads(urllib.request.urlopen(req).read().decode())
+
+          cells = []
+          for m in members:
+              user = m["login"]
+              cells.append(f"<td align=\"center\"><a href=\"https://github.com{user}\"><img src=\"https://github.com{user}.png?size=100\" width=\"100px\"/><br /><sub><b>@{user}</b></sub></a></td>")
+
+          grid = "<table><tr>" + "".join(cells) + "</tr></table>"
+
+          with open("profile/README.md", "r") as f:
+              content = f.read()
+
+          start = "<!-- ORG-MEMBERS:START -->"
+          end = "<!-- ORG-MEMBERS:END -->"
+          updated = content.split(start)[0] + f"{start}\n{grid}\n{end}" + content.split(end)[1]
+
+          with open("profile/README.md", "w") as f:
+              f.write(updated)
+          '
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@://github.com"
+          git add profile/README.md
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update org members" && git push)
