@@ -40,17 +40,22 @@ jobs:
               print(f"Error fetching members: {e}")
               members = []
 
+          # Filter out bot accounts
+          members = [m for m in members if not m["login"].endswith("[bot]")]
+
           cells = []
-          for m in members:
+          for i, m in enumerate(members):
               user = m["login"]
               cells.append(
-                  f'<td align="center">'
+                  f'<td align="center" width="140">'
                   f'<a href="https://github.com/{user}">'
-                  f'<img src="https://github.com/{user}.png?size=100" width="100px"/><br />'
+                  f'<img src="https://github.com/{user}.png?size=100" width="85px" style="border-radius:50%;"/><br />'
                   f'<sub><b>@{user}</b></sub>'
                   f'</a></td>'
               )
-
+              # Wrap into a new row every 5 members
+              if (i + 1) % 5 == 0 and i + 1 < len(members):
+                  cells.append("</tr><tr>")
           grid = "<table><tr>" + "".join(cells) + "</tr></table>"
 
           with open("profile/README.md", "r", encoding="utf-8") as f:
