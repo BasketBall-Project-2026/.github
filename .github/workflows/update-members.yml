@@ -59,7 +59,7 @@ jobs:
           after = content.split(end)[1]
           updated = f"{before}{start}\n{grid}\n{end}{after}"
 
-          with open("profile/README.md", "w", encoding="utf-8") as f:
+          with open("README.md", "w", encoding="utf-8") as f:
               f.write(updated)
           EOF
 
