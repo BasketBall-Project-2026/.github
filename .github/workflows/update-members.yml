@@ -16,14 +16,14 @@ jobs:
 
       - name: Fetch Org Members and Update README
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ORG_READ_TOKEN }}
         run: |
           python3 - << 'EOF'
           import os
           import json
           import urllib.request
 
-          url = "https://api.github.com/orgs/BasketBall-Project-2026/members"
+          url = "https://api.github.com/orgs/BasketBall-Project-2026/members?per_page=100"
           token = os.environ["GH_TOKEN"]
           req = urllib.request.Request(
               url,
@@ -33,8 +33,12 @@ jobs:
               },
           )
 
-          with urllib.request.urlopen(req) as resp:
-              members = json.loads(resp.read().decode())
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  members = json.loads(resp.read().decode())
+          except Exception as e:
+              print(f"Error fetching members: {e}")
+              members = []
 
           cells = []
           for m in members:
@@ -55,12 +59,15 @@ jobs:
           start = "<!-- ORG-MEMBERS:START -->"
           end = "<!-- ORG-MEMBERS:END -->"
 
-          before = content.split(start)[0]
-          after = content.split(end)[1]
-          updated = f"{before}{start}\n{grid}\n{end}{after}"
+          if start in content and end in content:
+              before = content.split(start)[0]
+              after = content.split(end)[1]
+              updated = f"{before}{start}\n{grid}\n{end}{after}"
 
-          with open("README.md", "w", encoding="utf-8") as f:
-              f.write(updated)
+              with open("README.md", "w", encoding="utf-8") as f:
+                  f.write(updated)
+          else:
+              print("Warning: ORG-MEMBERS comment markers not found in README.md")
           EOF
 
       - name: Commit changes
