@@ -1,5 +1,7 @@
 # BasketBall Project 2026
 
+Testing Git Discord Bot
+
 [![Update Org Members](https://github.com/BasketBall-Project-2026/.github/actions/workflows/update-members.yml/badge.svg)](https://github.com/BasketBall-Project-2026/.github/actions/workflows/update-members.yml)
 
 <!-- ORG-MEMBERS:START -->
